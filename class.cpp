@@ -4,21 +4,23 @@
 #include <string>
 #include <cctype>
 #include <limits>
+#include <algorithm>
 #include <memory>
 #include <ctime>
 #include <iomanip>
 
-static int readInt(const std::string& prompt, int value) {
-        std::cout << prompt;
-        if (std::cin >> value) {
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-            return value;   
-        }
-
-        std::cout << "Invalid input. Please enter an integer.\n";
-        std::cin.clear();
+static int readInt(const std::string& prompt,int value) {
+    std::cout << prompt;
+    if (std::cin >> value) {
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-}
+        return value;   
+    }
+
+    std::cout << "Invalid input. Please enter an integer.\n";
+    std::cin.clear();
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    }
+
 bool isAlphaSpace(const std::string& s) {
     if (s.empty()) return false;
     for (unsigned char ch : s) {
@@ -85,77 +87,32 @@ public:
     int getStayDays() const { return stay_days; }
     std::time_t getCheckOutTime() const { return checkin_time + (stay_days * 24 * 60 * 60);
 }
+
 };
-class CustomerFactory {
-public:
-    static std::unique_ptr<Customer> createCustomer(
-        const std::string& name,
-        int room,
-        const std::string& phone,
-        const std::string& roomType,
-        int days,
-        std::time_t time
-    ) {
-        return std::make_unique<Customer>(
-            name, room, phone, roomType, days, time
-        );
-    }
-};
-class BookingManager {
+/*class BookingManager {
 private:
-    std::unordered_map<
-        std::string,
-        std::unordered_map<int, std::unique_ptr<Customer>>
-    > customers;
+    BookingManager() {}  // Private constructor
 
-    BookingManager() {}
-
-public:
-    BookingManager(const BookingManager&) = delete;
-    BookingManager& operator=(const BookingManager&) = delete;
-
-    static BookingManager& getInstance() {
-        static BookingManager instance;
-        return instance;
-    }
-
-    bool isRoomBooked(const std::string& roomType, int room) {
-        auto hotel = customers.find(roomType);
-        if (hotel == customers.end())
-            return false;
-        return hotel->second.count(room) > 0;
-    }
-
-    void addCustomer(const std::string& roomType, int room,
-                     std::unique_ptr<Customer> customer) {
-        customers[roomType][room] = std::move(customer);
-    }
-
-    bool removeCustomer(const std::string& roomType, int room) {
-        return customers[roomType].erase(room) > 0;
-    }
-
-    auto& getAllCustomers() {
-        return customers;
-    }
-
-    bool empty() const {
-        return customers.empty();
-    }
-};
-bool isRoomBooked(const std::string roomType, int room) {
-    return BookingManager::getInstance().isRoomBooked(roomType, room);
+    std::unordered_map<int, std::unique_ptr<Customer>> customers;
 }
+*/
 
+std::unordered_map<std::string,std::unordered_map<int,Customer>> customers;
+
+bool isRoomBooked(const std::string roomType, int room) {
+    auto hotel = customers.find(roomType);
+    if(hotel == customers.end())
+        return false;
+    const auto rooms = hotel->second;
+    return rooms.find(room) != rooms.end();
+}
 int readStayDays() {
     int day;
-    while (true) {
-        int days = readInt("Enter number of days to stay: ",day);
-        if (days >= 1 && days <= 10)
-            return days;
-        std::cout << "Days must be between 1 and 10.\n";
+    int days = readInt("Enter number of days to stay: ",day);
+    if (days > 0 && days < 11)
+        return days;
+    std::cout << "Days must be in b\\w 1-10.\n";
     }
-}
 std::string formatTime(std::time_t t) {
     std::tm* tmPtr = std::localtime(&t);
     std::ostringstream oss;
@@ -175,7 +132,35 @@ void bookRoom() {
         break;
     std::cout << "Invalid name: Name must contain only letters and spaces. Try again.\n";
 }
-// rooom_type
+
+    // ROOM NUMBER
+    int value;
+    int roomInput = readInt("Enter room number: ",value);
+    while (roomInput <= 0 || isRoomBooked(room_typeInput, roomInput) || roomInput >=100 ) {
+        if (roomInput <= 0 && roomInput >= 100)
+            roomInput = readInt("Room must be positive and lessthan 100. Enter again: ",value);
+        else
+            roomInput = readInt("Room already booked. Enter another: ",value);
+    }
+
+    // PHONE
+        while (true) {
+        try {
+            std::cout << "Enter phone number: ";
+            std::cin >> phone; 
+            if (!isDigits(phone) || phone.size() < 10 || phone.size() > 15) {
+                throw std::invalid_argument("Phone must be digits only, length 10–15.");
+            }
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        break;
+        } catch (const std::exception& ex) {
+            std::cout << "Invalid phone: " << ex.what() << " Try again.\n";
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        }
+    }
+    // rooom_type
     while (true) {
     std::cout << "Enter room type (Delux / Non-Delux): ";
     std::getline(std::cin, room_typeInput);
@@ -196,48 +181,12 @@ void bookRoom() {
 
     std::cout << "Invalid room type. Please enter Delux or Non-Delux.\n";
 }
-    // ROOM NUMBER
-    int value;
-    int roomInput = readInt("Enter room number: ", value);
-
-    while (roomInput < 1 || roomInput > 100 || BookingManager::getInstance().isRoomBooked(room_typeInput, roomInput)) {
-    if (roomInput < 1 || roomInput > 100)
-        roomInput = readInt("Room must be between 1 and 100. Enter again: ", value);
-    else
-        roomInput = readInt("Room already booked. Enter another: ", value);
-}
-
-    // PHONE
-        while (true) {
-        try {
-            std::cout << "Enter phone number: ";
-            std::cin >> phone; 
-            if (!isDigits(phone) || phone.size() < 10 || phone.size() > 15) {
-                throw std::invalid_argument("Phone must be digits only, length 10–15.");
-            }
-            std::cin.clear();
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        break;
-        } catch (const std::exception& ex) {
-            std::cout << "Invalid phone: " << ex.what() << " Try again.\n";
-            std::cin.clear();
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        }
-    }
     //staydays
     int stayDays = readStayDays();
-
     std::time_t checkinTime = std::time(nullptr);
 
 
-    auto customer = CustomerFactory::createCustomer(
-    nameInput, roomInput, phone,
-    room_typeInput, stayDays, checkinTime
-);
-
-BookingManager::getInstance().addCustomer(
-    room_typeInput, roomInput, std::move(customer)
-);
+    customers[room_typeInput].emplace(roomInput,Customer(nameInput, roomInput, phone,room_typeInput,stayDays,checkinTime));
 
     std::cout << "Room successfully booked.\n";
     
@@ -246,13 +195,11 @@ BookingManager::getInstance().addCustomer(
 void displayBookedRooms() {
     std::cout << "\n--- Booked Rooms ---\n";
 
-    auto& customers =
-    BookingManager::getInstance().getAllCustomers();
-
     if (customers.empty()) {
         std::cout << "No rooms are currently booked.\n";
         return;
     }
+
     for (const auto& hotel : customers) {
         const std::string& hotelType = hotel.first;
         const auto& roomMap = hotel.second;
@@ -263,11 +210,11 @@ void displayBookedRooms() {
             int room = kv.first;
             const auto& c = kv.second;
 
-            std::cout << "Name: " << c->getname()
+            std::cout << "Name: " << c.getname()
                       << " | Room: " << room
-                      << " | Phone: " << c->getphone()
-                      << " | Check-in: " << formatTime(c->getCheckInTime())
-                      << " | Checkout: " << formatTime(c->getCheckOutTime())
+                      << " | Phone: " << c.getphone()
+                      << " | Check-in: " << formatTime(c.getCheckInTime())
+                      << " | Checkout: " << formatTime(c.getCheckOutTime())
                       << "\n";
         }
     }
@@ -282,24 +229,24 @@ void checkOut() {
     std::cout << "Enter room type (Delux / Non-Delux): ";
     std::cin >> roomType;
 
-    // Normalize room type (VERY IMPORTANT)
-    if (roomType == "delux" || roomType == "Delux")
-        roomType = "delux";
-    else if (roomType == "non-delux" || roomType == "Non-Delux")
-        roomType = "Non-Delux";
-    else {
-        std::cout << "Invalid room type.\n";
+    if (!roomType.empty()) {
+        if (roomType[0] == 'D' || roomType[0] == 'd')
+            roomType = "delux";
+        else if (roomType[0] == 'N' || roomType[0] == 'n')
+            roomType = "Non-Delux";
+    }
+    if (customers.find(roomType) == customers.end()) {
+        std::cout << "Room is vacant.\n";
         return;
     }
 
     std::cout << "Enter room number: ";
     std::cin >> room;
 
-    bool removed =
-        BookingManager::getInstance()
-            .removeCustomer(roomType, room);
+    auto& roomMap = customers[roomType];
+    auto erased = roomMap.erase(room);
 
-    if (removed)
+    if (erased)
         std::cout << "Room successfully checked out.\n";
     else
         std::cout << "Room is vacant.\n";
@@ -316,13 +263,11 @@ int main() {
 
         int choice;
         int choiceInput = readInt("Enter choice: ",choice);
-        switch (choiceInput) {
+        switch (choice) {
             case 1: bookRoom(); break;
-            case 2: if(BookingManager::getInstance().empty())
-{std::cout << "No rooms are currently booked."; }
+            case 2: if(customers.empty()){std::cout << "No rooms are currently booked."; }
                     else {displayBookedRooms();} break;
-            case 3: if(BookingManager::getInstance().empty())
-{std::cout << "No rooms are available for checkout."; }
+            case 3: if(customers.empty()){std::cout << "No rooms are available for checkout."; }
                     else {checkOut();} break;
             case 4:
                 std::cout << "Exiting... Thank you!\n";
