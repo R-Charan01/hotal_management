@@ -285,6 +285,7 @@ int main() {
         int choice;
         int choiceInput = readInt("Enter choice: ",choice);
         switch (choiceInput) {
+            
             case 1: bookRoom(); break;
             case 2: if(BookingManager::getInstance().empty()){
                         std::cout << "No rooms are currently booked."; }
