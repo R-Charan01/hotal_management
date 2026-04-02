@@ -12,30 +12,32 @@ bool BookingManager::empty() const {
 }
 
 bool BookingManager::isRoomBooked(const std::string& roomType, int room) {
-    auto it = customers.find(roomType);
-    if (it == customers.end())
+    auto hotelIt = customers.find(roomType);
+    if (hotelIt == customers.end())
         return false;
-    return it->second.count(room) > 0;
+
+    return hotelIt->second.count(room) > 0;
 }
 
-void BookingManager::addCustomer(
-    const std::string& roomType,
-    int room,
-    std::unique_ptr<Customer> customer)
-{
+
+void BookingManager::addCustomer(const std::string& roomType,int room,std::unique_ptr<Customer> customer){
     customers[roomType][room] = std::move(customer);
 }
 
 bool BookingManager::removeCustomer(const std::string& roomType, int room) {
-    auto it = customers.find(roomType);
-    if (it == customers.end())
+    auto hotelIt = customers.find(roomType);
+    if (hotelIt == customers.end())
         return false;
-    return it->second.erase(room) > 0;
-}
 
-std::unordered_map<
-    std::string,
-    std::unordered_map<int, std::unique_ptr<Customer>>
->& BookingManager::getAllCustomers() {
+    if (hotelIt->second.erase(room) == 0)
+        return false;
+
+    if (hotelIt->second.empty()) {
+        customers.erase(hotelIt);
+    }
+
+    return true;
+}
+std::unordered_map<std::string,std::unordered_map<int, std::unique_ptr<Customer>>>& BookingManager::getAllCustomers() {
     return customers;
 }

@@ -21,3 +21,6 @@ stl containers(unordered_map) -- booking storage --fastloopup of rooms and roomt
 const -- allows safe use of objects in read only type
 
 formatted ouput -- converts time into human readable formate
+
+g++ hotel.cpp utils.cpp customer.cpp customer_factory.cpp \
+   booking_manager.cpp booking_operations.cpp -o hotel

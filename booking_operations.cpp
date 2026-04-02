@@ -94,43 +94,47 @@ void displayBookedRooms() {
     }
 
     for (const auto& hotel : customers) {
-        std::cout << "\nRoom Type: " << hotel.first << "\n";
+    const auto& roomMap = hotel.second;
 
-        for (const auto& roomPair : hotel.second) {
-            const auto& customer = roomPair.second;
 
-            std::cout << "Name: " << customer->getname()
-                      << " | Room: " << customer->getroom()
-                      << " | Phone: " << customer->getphone()
-                      << " | Check-in: " << formatTime(customer->getCheckInTime())
-                      << " | Check-out: " << formatTime(customer->getCheckOutTime())
-                      << "\n";
-        }
+    if (roomMap.empty())
+        continue;
+
+    std::cout << "\nRoom Type: " << hotel.first << "\n";
+
+    for (const auto& kv : roomMap) {
+        const auto& c = kv.second;
+        std::cout << "Name: " << c->getname()
+                  << " | Room: " << kv.first
+                  << " | Phone: " << c->getphone()
+                  << "\n";
     }
+}
+
 }
 
 // -------------------- Check Out --------------------
 void checkOut() {
     std::cout << "\n--- Check Out ---\n";
-
     std::string roomType;
-    int room;
 
-    std::cout << "Enter room type (Delux / Non-Delux): ";
-    std::cin >> roomType;
-
-    char c = std::tolower(roomType[0]);
-    if (c == 'd')
-        roomType = "delux";
-    else if (c == 'n')
-        roomType = "Non-Delux";
-    else {
-        std::cout << "Invalid room type.\n";
-        return;
+    while (true) {
+        std::cout << "Enter room type (Delux / Non-Delux): ";
+        std::cin >> roomType;
+        char c = std::tolower(roomType[0]);
+        if (c == 'd') {
+            roomType = "delux";
+        break;
+        }
+        else if (c == 'n') {
+            roomType = "Non-Delux";
+        break;
+        }
+        else {
+            std::cout << "Invalid room type. Please enter Delux or Non-Delux.\n";
+        }
     }
-
-    room = readInt("Enter room number: ",room);
-
+    int room = readInt("Enter room number: ",room);
     bool removed = BookingManager::getInstance().removeCustomer(roomType, room);
     if (removed)
         std::cout << "Room successfully checked out.\n";
