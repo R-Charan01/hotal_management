@@ -1,43 +1,131 @@
 #include "booking_manager.h"
+#include "customer_factory.h"
+#include "utils.h"
 
-BookingManager::BookingManager() {}
+#include <iostream>
 
+// ---------- Constructor ----------
+BookingManager::BookingManager() {
+    inventory["Ram_Delux"] = 10;
+    inventory["Ram_Non-Delux"] = 10;
+    inventory["Charan_Non-Delux"] = 10;
+}
+
+// ---------- Singleton Instance ----------
 BookingManager& BookingManager::getInstance() {
     static BookingManager instance;
     return instance;
 }
 
-bool BookingManager::empty() const {
-    return customers.empty();
+// ---------- Show Availability ----------
+void BookingManager::showAvailability(const std::string& roomType) {
+    std::cout << "\nAvailable " << roomType << " rooms:\n";
+
+    for (auto& i : inventory) {
+        auto pos = i.first.find('_');
+        std::string hotel = i.first.substr(0, pos);
+        std::string type  = i.first.substr(pos + 1);
+
+        if (type == roomType) {
+            std::cout << hotel << " Hotel → "
+                      << i.second << " rooms\n";
+        }
+    }
 }
 
-bool BookingManager::isRoomBooked(const std::string& roomType, int room) {
-    auto hotelIt = customers.find(roomType);
-    if (hotelIt == customers.end())
-        return false;
+// ---------- Book Multiple Rooms ----------
+std::vector<std::string> BookingManager::bookRooms(
+    const std::string& hotel,
+    const std::string& roomType,
+    const std::string& name,
+    const std::string& phone,
+    int days,
+    int count)
+{
+    std::vector<std::string> keys;
+    std::string invKey = hotel + "_" + roomType;
 
-    return hotelIt->second.count(room) > 0;
-}
+    if (inventory[invKey] < count)
+        return keys;
 
+    static int keyCounter = 1;
 
-void BookingManager::addCustomer(const std::string& roomType,int room,std::unique_ptr<Customer> customer){
-    customers[roomType][room] = std::move(customer);
-}
+    for (int i = 0; i < count; ++i) {
+        inventory[invKey]--;
 
-bool BookingManager::removeCustomer(const std::string& roomType, int room) {
-    auto hotelIt = customers.find(roomType);
-    if (hotelIt == customers.end())
-        return false;
+        std::string key;
+        key += hotelCode(hotel);
+        key += "_";
+        key += roomCode(roomType);
+        key += "_";
+        key += std::to_string(keyCounter++);
 
-    if (hotelIt->second.erase(room) == 0)
-        return false;
+        bookings[key] =
+            CustomerFactory::createCustomer(
+                name, hotel, roomType, phone, days);
 
-    if (hotelIt->second.empty()) {
-        customers.erase(hotelIt);
+        keys.push_back(key);
     }
 
-    return true;
+    return keys;
 }
-std::unordered_map<std::string,std::unordered_map<int, std::unique_ptr<Customer>>>& BookingManager::getAllCustomers() {
-    return customers;
+
+// ---------- Display Bookings ----------
+void BookingManager::displayBookings() {
+    if (bookings.empty()) {
+        std::cout << "No bookings.\n";
+        return;
+    }
+
+    for (auto& b : bookings) {
+        auto& c = b.second;
+        std::cout << "\nKey: " << b.first
+                  << "\nName: " << c->getName()
+                  << "\nHotel: " << c->getHotel()
+                  << "\nRoom Type: " << c->getRoomType()
+                  << "\nPhone: " << c->getPhone()
+                  << "\nCheck-in: " << formatTime(c->getCheckIn())
+                  << "\nCheckout: " << formatTime(c->getCheckOut())
+                  << "\n";
+    }
+}
+
+// ---------- Show Room Status ----------
+void BookingManager::showRoomStatus() {
+    std::unordered_map<std::string, int> bookedCount;
+
+    for (auto& b : bookings) {
+        auto& c = b.second;
+        bookedCount[c->getHotel() + "_" + c->getRoomType()]++;
+    }
+
+    std::cout << "\n--- ROOM STATUS ---\n";
+    for (auto& i : inventory) {
+        auto pos = i.first.find('_');
+        std::string hotel = i.first.substr(0, pos);
+        std::string type  = i.first.substr(pos + 1);
+
+        std::cout << hotel << " Hotel | " << type
+                  << " → Available: " << i.second
+                  << " | Booked: " << bookedCount[i.first]
+                  << "\n";
+    }
+}
+
+// ---------- Checkout ----------
+void BookingManager::checkout() {
+    std::string key;
+    std::cout << "Enter booking key: ";
+    std::cin >> key;
+
+    if (!bookings.count(key)) {
+        std::cout << "Invalid booking key.\n";
+        return;
+    }
+
+    auto& c = bookings[key];
+    inventory[c->getHotel() + "_" + c->getRoomType()]++;
+    bookings.erase(key);
+
+    std::cout << "Checkout successful.\n";
 }

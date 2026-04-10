@@ -2,17 +2,17 @@
 #define CUSTOMER_FACTORY_H
 
 #include <memory>
+#include <string>
 #include "customer.h"
 
 class CustomerFactory {
 public:
     static std::unique_ptr<Customer> createCustomer(
         const std::string& name,
-        int room,
-        const std::string& phone,
+        const std::string& hotel,
         const std::string& roomType,
-        int days,
-        std::time_t time);
+        const std::string& phone,
+        int days);
 };
 
 #endif

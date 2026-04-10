@@ -3,35 +3,32 @@
 
 #include <unordered_map>
 #include <memory>
+#include <vector>
 #include <string>
 #include "customer.h"
 
 class BookingManager {
-private:
-    std::unordered_map<
-        std::string,
-        std::unordered_map<int, std::unique_ptr<Customer>>
-    > customers;
+    std::unordered_map<std::string, int> inventory;
+    std::unordered_map<std::string, std::unique_ptr<Customer>> bookings;
 
     BookingManager();
 
 public:
     static BookingManager& getInstance();
 
-    bool empty() const;
-    bool isRoomBooked(const std::string& roomType, int room);
-    void addCustomer(
-        const std::string& roomType,
-        int room,
-        std::unique_ptr<Customer> customer
-    );
-    bool removeCustomer(const std::string& roomType, int room);
+    void showAvailability(const std::string& roomType);
 
-    // ✅ FIX IS HERE
-    std::unordered_map<
-        std::string,
-        std::unordered_map<int, std::unique_ptr<Customer>>
-    >& getAllCustomers();
+    std::vector<std::string> bookRooms(
+        const std::string& hotel,
+        const std::string& roomType,
+        const std::string& name,
+        const std::string& phone,
+        int days,
+        int count);
+
+    void displayBookings();
+    void showRoomStatus();
+    void checkout();
 };
 
 #endif

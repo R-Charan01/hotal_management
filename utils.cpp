@@ -1,48 +1,43 @@
 #include "utils.h"
 #include <iostream>
 #include <limits>
-#include <cctype>
 #include <iomanip>
 #include <sstream>
+#include <cctype>
 
-int readInt(const std::string& prompt, int& value) {
+std::string normalizeHotel(std::string h) {
+    for (char& c : h) c = std::tolower(c);
+    if (h == "ram" || h == "r") return "Ram";
+    if (h == "charan" || h == "c") return "Charan";
+    return "";
+}
+
+std::string normalizeRoomType(std::string t) {
+    for (char& c : t) c = std::tolower(c);
+    if (!t.empty() && t[0] == 'd') return "Delux";
+    if (!t.empty() && t[0] == 'n') return "Non-Delux";
+    return "";
+}
+
+char hotelCode(const std::string& hotel) {
+    return std::tolower(hotel[0]);
+}
+
+char roomCode(const std::string& roomType) {
+    return std::tolower(roomType[0]);
+}
+
+int readInt(const std::string& msg) {
+    int x;
     while (true) {
-        std::cout << prompt;
-
-        if (std::cin >> value) {
+        std::cout << msg;
+        if (std::cin >> x && x > 0) {
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-            return value;   // ✅ always returns
+            return x;
         }
-
-        std::cout << "Invalid input. Please enter an integer.\n";
         std::cin.clear();
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    }
-}
-
-
-bool isAlphaSpace(const std::string& s) {
-    if (s.empty()) return false;
-    for (unsigned char ch : s)
-        if (!std::isalpha(ch) && !std::isspace(ch))
-            return false;
-    return true;
-}
-
-bool isDigits(const std::string& s) {
-    if (s.empty()) return false;
-    for (unsigned char ch : s)
-        if (!std::isdigit(ch))
-            return false;
-    return true;
-}
-int readStayDays() {
-    int day;
-    while (true) {
-        int days = readInt("Enter number of days to stay: ",day);
-        if (days >= 1 && days <= 10)
-            return days;
-        std::cout << "Days must be between 1 and 10.\n";
+        std::cout << "Invalid input. Try again.\n";
     }
 }
 

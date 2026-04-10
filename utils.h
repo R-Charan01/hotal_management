@@ -4,10 +4,13 @@
 #include <string>
 #include <ctime>
 
-int readInt(const std::string& prompt,int& value);
-bool isAlphaSpace(const std::string& s);
-bool isDigits(const std::string& s);
-int readStayDays();
+std::string normalizeHotel(std::string h);
+std::string normalizeRoomType(std::string t);
+
+char hotelCode(const std::string& hotel);
+char roomCode(const std::string& roomType);
+
+int readInt(const std::string& msg);
 std::string formatTime(std::time_t t);
 
 #endif

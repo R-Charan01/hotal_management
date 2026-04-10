@@ -1,307 +1,282 @@
 #include <iostream>
-#include <vector>
 #include <unordered_map>
-#include <string>
-#include <cctype>
-#include <limits>
+#include <vector>
 #include <memory>
+#include <string>
+#include <limits>
 #include <ctime>
 #include <iomanip>
+#include <sstream>
+#include <cctype>
 
-static int readInt(const std::string& prompt, int value) {
-        std::cout << prompt;
-        if (std::cin >> value) {
+// ================= HELPER FUNCTIONS =================
+
+// Normalize hotel input (ram/r → Ram, charan/c → Charan)
+std::string normalizeHotel(std::string h) {
+    for (char& c : h) c = std::tolower(c);
+    if (h == "ram" || h == "r") return "Ram";
+    if (h == "charan" || h == "c") return "Charan";
+    return "";
+}
+
+// Normalize room type input
+std::string normalizeRoomType(std::string t) {
+    for (char& c : t) c = std::tolower(c);
+    if (!t.empty() && t[0] == 'd') return "Delux";
+    if (!t.empty() && t[0] == 'n') return "Non-Delux";
+    return "";
+}
+
+// Convert hotel name to short code
+char hotelCode(const std::string& hotel) {
+    return std::tolower(hotel[0]); // Ram -> r, Charan -> c
+}
+
+// Convert room type to short code
+char roomCode(const std::string& roomType) {
+    return std::tolower(roomType[0]); // Delux -> d, Non -> n
+}
+
+// Safe integer input
+int readInt(const std::string& msg) {
+    int x;
+    while (true) {
+        std::cout << msg;
+        if (std::cin >> x && x > 0) {
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-            return value;   
+            return x;
         }
-        std::cout << "Invalid input. Please enter an integer.\n";
         std::cin.clear();
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-}
-
-bool isAlphaSpace(const std::string& s) {
-    if (s.empty()) return false;
-    for (unsigned char ch : s) {
-        if (!(std::isalpha(ch) || std::isspace(ch)))
-            return false;
-    }
-    return true;
-}
-
-bool isDigits(const std::string& s) {
-    if (s.empty()) return false;
-    for (unsigned char ch : s) {
-        if (!std::isdigit(ch))
-            return false;
-    }
-    return true;
-}
-
-class Customer {
-private:
-    std::string name;
-    std::string room_type;
-    int room;
-    std::string phone;
-    std::time_t checkin_time;
-    int stay_days;
-
-    static void validateName(const std::string& n) {
-        if (!isAlphaSpace(n)) {
-            throw std::invalid_argument("Name must contain only letters and spaces.");
-        }
-    }
-
-    static void validateRoom(int r) {
-        if (r <= 0) {
-            throw std::invalid_argument("Room number must be a positive integer.");
-        }
-    }
-
-    static void validatePhone(const std::string& p) {
-        if (!isDigits(p) || p.size() < 10 || p.size() > 15) {
-            throw std::invalid_argument("Phone must be digits only, length 10–15.");
-        }
-    }
-
-public:
-    Customer() = default;
-    Customer(const std::string n, int r, const std::string p,const std::string t,int days, std::time_t inTime)
-    {
-        validateName(n);
-        validateRoom(r);
-        validatePhone(p);
-        name = n;
-        room = r;
-        phone = p;
-        room_type = t;
-        stay_days = days;
-        checkin_time = inTime;
-
-    }
-    std::string getname() const { return name; }
-    int getroom() const { return room; }
-    std::string getphone() const {return phone; }
-    std::string getroom_type() const {return room_type; }
-    std::time_t getCheckInTime() const { return checkin_time; }
-    int getStayDays() const { return stay_days; }
-    std::time_t getCheckOutTime() const { return checkin_time + (stay_days * 24 * 60 * 60);
-}
-};
-//factory design pattern
-class CustomerFactory {
-public:
-    static std::unique_ptr<Customer> createCustomer(const std::string& name,int room,const std::string& phone,const std::string& roomType,int days,std::time_t time)
-    {
-        return std::make_unique<Customer>(name, room, phone, roomType, days, time);
-    }
-};
-//singleton design pattern
-class BookingManager {
-private:
-    std::unordered_map<std::string,std::unordered_map<int, std::unique_ptr<Customer>>> customers;
-    BookingManager() {}
-public:
-    BookingManager(const BookingManager&) = delete;
-    BookingManager& operator=(const BookingManager&) = delete;
-    static BookingManager& getInstance() {
-        static BookingManager instance;
-        return instance;
-    }
-
-    bool isRoomBooked(const std::string& roomType, int room) {
-        auto hotel = customers.find(roomType);
-        if (hotel == customers.end())
-            return false;
-        return hotel->second.count(room) > 0;
-    }
-
-    void addCustomer(const std::string& roomType, int room,std::unique_ptr<Customer> customer) 
-    {
-        customers[roomType][room] = std::move(customer);
-    }
-
-    bool removeCustomer(const std::string& roomType, int room) {
-        return customers[roomType].erase(room) > 0;
-    }
-
-    auto& getAllCustomers() {
-        return customers;
-    }
-
-    bool empty() const {
-        return customers.empty();
-    }
-};
-bool isRoomBooked(const std::string roomType, int room) {
-    return BookingManager::getInstance().isRoomBooked(roomType, room);
-}
-
-int readStayDays() {
-    int day;
-    while (true) {
-        int days = readInt("Enter number of days to stay: ",day);
-        if (days >= 1 && days <= 10)
-            return days;
-        std::cout << "Days must be between 1 and 10.\n";
+        std::cout << "Invalid input. Try again.\n";
     }
 }
+
+// Format date
 std::string formatTime(std::time_t t) {
     std::tm* tmPtr = std::localtime(&t);
     std::ostringstream oss;
     oss << std::put_time(tmPtr, "%d-%m-%Y");
     return oss.str();
 }
-//roombooking function
-void bookRoom() {
-    std::cout << "\n--- Book Room ---\n";
+
+// ================= CUSTOMER CLASS =================
+class Customer {
+    std::string name;
+    std::string hotel;
+    std::string roomType;
     std::string phone;
-    std::string nameInput;
-    std::string room_typeInput;
+    int stayDays;
+    std::time_t checkIn;
 
-    // NAME
-    while (true) {
-        std::cout << "Enter customer name: ";
-        std::getline(std::cin, nameInput);
-        if (isAlphaSpace(nameInput))
-        break;
-    std::cout << "Invalid name: Name must contain only letters and spaces. Try again.\n";
-}
-    // rooom_type
-    while (true) {
-    std::cout << "Enter room type (Delux / Non-Delux): ";
-    std::getline(std::cin, room_typeInput);
-    if (room_typeInput.empty()) {
-        std::cout << "Invalid room type. Please enter Delux or Non-Delux.\n";
-        continue;
+public:
+    Customer(std::string n, std::string h, std::string r,
+             std::string p, int d)
+        : name(n), hotel(h), roomType(r),
+          phone(p), stayDays(d),
+          checkIn(std::time(nullptr)) {}
+
+    std::string getName() const { return name; }
+    std::string getHotel() const { return hotel; }
+    std::string getRoomType() const { return roomType; }
+    std::string getPhone() const { return phone; }
+    std::time_t getCheckIn() const { return checkIn; }
+    std::time_t getCheckOut() const {
+        return checkIn + stayDays * 24 * 60 * 60;
     }
+};
 
-    if (room_typeInput[0] == 'D' || room_typeInput[0] == 'd' ) {
-            room_typeInput= "delux";
-            break;
-        }
-
-    if (room_typeInput[0] == 'n' || room_typeInput[0] == 'N') {
-            room_typeInput="Non-Delux";
-            break;
-        }
-
-    std::cout << "Invalid room type. Please enter Delux or Non-Delux.\n";
-}
-    // ROOM NUMBER
-    int value;
-    int roomInput = readInt("Enter room number: ", value);
-
-    while (roomInput < 1 || roomInput > 100 || BookingManager::getInstance().isRoomBooked(room_typeInput, roomInput)) {
-    if (roomInput < 1 || roomInput > 100)
-        roomInput = readInt("Room must be between 1 and 100. Enter again: ", value);
-    else
-        roomInput = readInt("Room already booked. Enter another: ", value);
-}
-    // PHONE
-    while (true) {
-    try {
-        std::cout << "Enter phone number: ";
-            std::cin >> phone; 
-        if (!isDigits(phone) || phone.size() < 10 || phone.size() > 15) {
-            throw std::invalid_argument("Phone must be digits only, length 10–15.");
-        }
-        std::cin.clear();
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        break;
-        } catch (const std::exception& ex) {
-            std::cout << "Invalid phone: " << ex.what() << " Try again.\n";
-            std::cin.clear();
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        }
-}
-    //staydays
-    int stayDays = readStayDays();
-    std::time_t checkinTime = std::time(nullptr);
-    auto customer = CustomerFactory::createCustomer(nameInput, roomInput, phone,room_typeInput, stayDays, checkinTime);
-    BookingManager::getInstance().addCustomer(room_typeInput, roomInput, std::move(customer));
-    std::cout << "Room successfully booked.\n";
-    
-}
-//display function
-void displayBookedRooms() {
-    std::cout << "\n--- Booked Rooms ---\n";
-    auto& customers =BookingManager::getInstance().getAllCustomers();
-    if (customers.empty()) {
-        std::cout << "No rooms are currently booked.\n";
-        return;
-    }
-    for (const auto& hotel : customers) 
+// ================= FACTORY DESIGN PATTERN =================
+class CustomerFactory {
+public:
+    static std::unique_ptr<Customer> createCustomer(
+        const std::string& name,
+        const std::string& hotel,
+        const std::string& roomType,
+        const std::string& phone,
+        int days)
     {
-        const std::string& hotelType = hotel.first;
-        const auto& roomMap = hotel.second;
-        std::cout << "\nHotel Type: " << hotelType << "\n";
-        for (const auto& kv : roomMap) {
-            int room = kv.first;
-            const auto& c = kv.second;
-            std::cout << "Name: " << c->getname()
-                      << " | Room: " << room
-                      << " | Phone: " << c->getphone()
-                      << " | Check-in: " << formatTime(c->getCheckInTime())
-                      << " | Checkout: " << formatTime(c->getCheckOutTime())
+        return std::make_unique<Customer>(
+            name, hotel, roomType, phone, days);
+    }
+};
+
+// ================= SINGLETON BOOKING MANAGER =================
+class BookingManager {
+    std::unordered_map<std::string, int> inventory;
+    std::unordered_map<std::string, std::unique_ptr<Customer>> bookings;
+
+    BookingManager() {
+        inventory["Ram_Delux"] = 10;
+        inventory["Ram_Non-Delux"] = 10;
+        inventory["Charan_Non-Delux"] = 5;
+    }
+
+public:
+    static BookingManager& getInstance() {
+        static BookingManager instance;
+        return instance;
+    }
+
+    // Show availability (including 0 rooms)
+    void showAvailability(const std::string& roomType) {
+        std::cout << "\nAvailable " << roomType << " rooms:\n";
+        for (auto& i : inventory) {
+            auto pos = i.first.find('_');
+            std::string hotel = i.first.substr(0, pos);
+            std::string type  = i.first.substr(pos + 1);
+
+            if (type == roomType) {
+                std::cout << hotel << " Hotel → "
+                          << i.second << " rooms\n";
+            }
+        }
+    }
+
+    // Book multiple rooms → multiple keys
+    std::vector<std::string> bookRooms(
+        const std::string& hotel,
+        const std::string& roomType,
+        const std::string& name,
+        const std::string& phone,
+        int days,
+        int count)
+    {
+        std::vector<std::string> keys;
+        std::string invKey = hotel + "_" + roomType;
+        if (inventory[invKey] < count) return keys;
+
+        static int keyCounter = 1;
+
+        for (int i = 0; i < count; ++i) {
+            inventory[invKey]--;
+
+            std::string key;
+            key += hotelCode(hotel);
+            key += "_";
+            key += roomCode(roomType);
+            key += "_";
+            key += std::to_string(keyCounter++);
+
+            bookings[key] =
+                CustomerFactory::createCustomer(
+                    name, hotel, roomType, phone, days);
+
+            keys.push_back(key);
+        }
+        return keys;
+    }
+
+    void displayBookings() {
+        if (bookings.empty()) {
+            std::cout << "No bookings.\n";
+            return;
+        }
+
+        for (auto& b : bookings) {
+            auto& c = b.second;
+            std::cout << "\nKey: " << b.first
+                      << "\nName: " << c->getName()
+                      << "\nHotel: " << c->getHotel()
+                      << "\nRoom Type: " << c->getRoomType()
+                      << "\nPhone: " << c->getPhone()
+                      << "\nCheck-in: " << formatTime(c->getCheckIn())
+                      << "\nCheckout: " << formatTime(c->getCheckOut())
                       << "\n";
         }
     }
-}
-//checkout function
-void checkOut() {
-    std::cout << "\n--- Check Out ---\n";
-    std::string roomType;
-    int room;
-    std::cout << "Enter room type (Delux / Non-Delux): ";
-    std::cin >> roomType;
-    if (roomType == "delux" || roomType == "Delux")
-        roomType = "delux";
-    else if (roomType == "non-delux" || roomType == "Non-Delux")
-        roomType = "Non-Delux";
-    else {
-        std::cout << "Invalid room type.\n";
-        return;
-    }
-    std::cout << "Enter room number: ";
-    std::cin >> room;
 
-    bool removed =BookingManager::getInstance().removeCustomer(roomType, room);
-    if (removed)
-        std::cout << "Room successfully checked out.\n";
-    else
-        std::cout << "Room is vacant.\n";
+    void showRoomStatus() {
+        std::unordered_map<std::string, int> bookedCount;
+
+        for (auto& b : bookings) {
+            auto& c = b.second;
+            bookedCount[c->getHotel() + "_" + c->getRoomType()]++;
+        }
+
+        std::cout << "\n--- ROOM STATUS ---\n";
+        for (auto& i : inventory) {
+            auto pos = i.first.find('_');
+            std::string hotel = i.first.substr(0, pos);
+            std::string type  = i.first.substr(pos + 1);
+
+            std::cout << hotel << " Hotel | " << type
+                      << " → Available: " << i.second
+                      << " | Booked: " << bookedCount[i.first] << "\n";
+        }
+    }
+
+    void checkout() {
+        std::string key;
+        std::cout << "Enter booking key: ";
+        std::cin >> key;
+
+        if (!bookings.count(key)) {
+            std::cout << "Invalid key.\n";
+            return;
+        }
+
+        auto& c = bookings[key];
+        inventory[c->getHotel() + "_" + c->getRoomType()]++;
+        bookings.erase(key);
+        std::cout << "Checkout successful.\n";
+    }
+};
+
+// ================= BOOK ROOM FLOW =================
+void bookRoom() {
+    std::string name, roomType, hotel, phone;
+
+    std::cout << "Enter customer name: ";
+    std::getline(std::cin, name);
+
+    std::cout << "Select room type (Delux / Non-Delux): ";
+    std::getline(std::cin, roomType);
+    roomType = normalizeRoomType(roomType);
+
+    BookingManager::getInstance().showAvailability(roomType);
+
+    std::cout << "Select hotel: ";
+    std::getline(std::cin, hotel);
+    hotel = normalizeHotel(hotel);
+
+    int roomCount = readInt("Enter number of rooms required: ");
+
+    std::cout << "Enter phone number: ";
+    std::cin >> phone;
+    std::cin.ignore();
+
+    int stayDays = readInt("Enter stay days: ");
+
+    auto keys = BookingManager::getInstance().bookRooms(
+        hotel, roomType, name, phone, stayDays, roomCount);
+
+    if (keys.empty()) {
+        std::cout << "Not enough rooms available.\n";
+    } else {
+        std::cout << "\nRooms booked successfully!\nBooking Keys:\n";
+        for (auto& k : keys)
+            std::cout << k << "\n";
+    }
 }
-//main 
+
+// ================= MAIN =================
 int main() {
     while (true) {
         std::cout << "\n=== Hotel Management ===\n";
-        std::cout << "Choose one of the options: \n";
         std::cout << "1. Book Room\n";
         std::cout << "2. Display Booked Rooms\n";
         std::cout << "3. Check Out\n";
-        std::cout << "4. Exit\n";
-        
-        int choice;
-        int choiceInput = readInt("Enter choice: ",choice);
-        switch (choiceInput) {
-            
-            case 1: bookRoom(); break;
-            case 2: if(BookingManager::getInstance().empty()){
-                        std::cout << "No rooms are currently booked."; }
-                    else{
-                        displayBookedRooms();
-                    } break;
-            case 3: if(BookingManager::getInstance().empty()){
-                        std::cout << "No rooms are available for checkout."; }
-                    else{
-                        checkOut();
-                    } break;
-            case 4:
-                     std::cout << "Exiting... Thank you!\n";
-                    return 0;
-            default:
-                    std::cout << "Invalid option.\n";
-        }
+        std::cout << "4. Show Room Status\n";
+        std::cout << "5. Exit\n";
+
+        int choice = readInt("Enter choice: ");
+
+        if (choice == 1) bookRoom();
+        else if (choice == 2) BookingManager::getInstance().displayBookings();
+        else if (choice == 3) BookingManager::getInstance().checkout();
+        else if (choice == 4) BookingManager::getInstance().showRoomStatus();
+        else break;
     }
+    return 0;
 }

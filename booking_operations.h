@@ -2,7 +2,5 @@
 #define BOOKING_OPERATIONS_H
 
 void bookRoom();
-void displayBookedRooms();
-void checkOut();
 
 #endif

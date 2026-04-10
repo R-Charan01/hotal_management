@@ -5,33 +5,25 @@
 
 int main() {
     while (true) {
-        std::cout << "\n=== Hotel Management ===\n";
-        std::cout << "Choose one of the options: \n";
+        std::cout << "\n=== HOTEL MANAGEMENT ===\n";
         std::cout << "1. Book Room\n";
         std::cout << "2. Display Booked Rooms\n";
         std::cout << "3. Check Out\n";
-        std::cout << "4. Exit\n";
-        
-        int choice;
-        int choiceInput = readInt("Enter choice: ",choice);
-        switch (choiceInput) {
-            
-            case 1: bookRoom(); break;
-            case 2: if(BookingManager::getInstance().empty()){
-                        std::cout << "No rooms are currently booked."; }
-                    else{
-                        displayBookedRooms();
-                    } break;
-            case 3: if(BookingManager::getInstance().empty()){
-                        std::cout << "No rooms are available for checkout."; }
-                    else{
-                        checkOut();
-                    } break;
-            case 4:
-                     std::cout << "Exiting... Thank you!\n";
-                    return 0;
-            default:
-                    std::cout << "Invalid option.\n";
-        }
+        std::cout << "4. Show Room Status\n";
+        std::cout << "5. Exit\n";
+
+        int choice = readInt("Enter choice: ");
+
+        if (choice == 1)
+            bookRoom();
+        else if (choice == 2)
+            BookingManager::getInstance().displayBookings();
+        else if (choice == 3)
+            BookingManager::getInstance().checkout();
+        else if (choice == 4)
+            BookingManager::getInstance().showRoomStatus();
+        else
+            break;
     }
+    return 0;
 }

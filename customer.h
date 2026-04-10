@@ -5,28 +5,23 @@
 #include <ctime>
 
 class Customer {
-private:
     std::string name;
-    std::string room_type;
-    int room;
+    std::string hotel;
+    std::string roomType;
     std::string phone;
-    std::time_t checkin_time;
-    int stay_days;
-
-    static void validateName(const std::string& n);
-    static void validateRoom(int r);
-    static void validatePhone(const std::string& p);
+    int stayDays;
+    std::time_t checkIn;
 
 public:
-    Customer(const std::string& n, int r, const std::string& p,
-             const std::string& t, int days, std::time_t inTime);
+    Customer(std::string n, std::string h, std::string r,
+             std::string p, int d);
 
-    std::string getname() const;
-    int getroom() const;
-    std::string getphone() const;
-    std::string getroom_type() const;
-    std::time_t getCheckInTime() const;
-    std::time_t getCheckOutTime() const;
+    std::string getName() const;
+    std::string getHotel() const;
+    std::string getRoomType() const;
+    std::string getPhone() const;
+    std::time_t getCheckIn() const;
+    std::time_t getCheckOut() const;
 };
 
 #endif
