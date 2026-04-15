@@ -29,6 +29,7 @@ public:
     void displayBookings();
     void showRoomStatus();
     void checkout();
+    bool hasBookings() const;
 };
 
 #endif

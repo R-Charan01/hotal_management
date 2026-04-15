@@ -18,8 +18,6 @@ void bookRoom() {
     std::cout << "Select hotel: ";
     std::getline(std::cin, hotel);
     hotel = normalizeHotel(hotel);
-
-    // ✅ FIX 1: INVALID HOTEL CHECK
     if (hotel.empty()) {
         std::cout << "Invalid hotel selection.\n";
         return;

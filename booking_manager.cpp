@@ -4,20 +4,20 @@
 
 #include <iostream>
 
-// ---------- Constructor ----------
+//Constructor
 BookingManager::BookingManager() {
     inventory["Ram_Delux"] = 10;
     inventory["Ram_Non-Delux"] = 10;
     inventory["Charan_Non-Delux"] = 10;
 }
 
-// ---------- Singleton Instance ----------
+//Singleton
 BookingManager& BookingManager::getInstance() {
     static BookingManager instance;
     return instance;
 }
 
-// ---------- Show Availability ----------
+//Show Availability
 void BookingManager::showAvailability(const std::string& roomType) {
     std::cout << "\nAvailable " << roomType << " rooms:\n";
 
@@ -33,7 +33,7 @@ void BookingManager::showAvailability(const std::string& roomType) {
     }
 }
 
-// ---------- Book Multiple Rooms ----------
+//Book Multiple Rooms
 std::vector<std::string> BookingManager::bookRooms(
     const std::string& hotel,
     const std::string& roomType,
@@ -70,7 +70,7 @@ std::vector<std::string> BookingManager::bookRooms(
     return keys;
 }
 
-// ---------- Display Bookings ----------
+//Display Bookings
 void BookingManager::displayBookings() {
     if (bookings.empty()) {
         std::cout << "No bookings.\n";
@@ -79,18 +79,19 @@ void BookingManager::displayBookings() {
 
     for (auto& b : bookings) {
         auto& c = b.second;
-        std::cout << "\nKey: " << b.first
-                  << "\nName: " << c->getName()
-                  << "\nHotel: " << c->getHotel()
-                  << "\nRoom Type: " << c->getRoomType()
-                  << "\nPhone: " << c->getPhone()
-                  << "\nCheck-in: " << formatTime(c->getCheckIn())
-                  << "\nCheckout: " << formatTime(c->getCheckOut())
-                  << "\n";
+        std::cout << "Key: " << b.first
+          << " | Name: " << c->getName()
+          << " | Hotel: " << c->getHotel()
+          << " | Room: " << c->getRoomType()
+          << " | Phone: " << c->getPhone()
+          << " | Check-in: " << formatTime(c->getCheckIn())
+          << " | Checkout: " << formatTime(c->getCheckOut())
+          << '\n';
+
     }
 }
 
-// ---------- Show Room Status ----------
+//Show Room Status 
 void BookingManager::showRoomStatus() {
     std::unordered_map<std::string, int> bookedCount;
 
@@ -112,7 +113,7 @@ void BookingManager::showRoomStatus() {
     }
 }
 
-// ---------- Checkout ----------
+//Checkout
 void BookingManager::checkout() {
     std::string key;
     std::cout << "Enter booking key: ";
@@ -128,4 +129,7 @@ void BookingManager::checkout() {
     bookings.erase(key);
 
     std::cout << "Checkout successful.\n";
+}
+bool BookingManager::hasBookings() const {
+    return !bookings.empty();
 }

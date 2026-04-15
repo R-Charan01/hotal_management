@@ -18,8 +18,13 @@ int main() {
             bookRoom();
         else if (choice == 2)
             BookingManager::getInstance().displayBookings();
-        else if (choice == 3)
-            BookingManager::getInstance().checkout();
+        else if (choice == 3) {
+    if (!BookingManager::getInstance().hasBookings()) {
+        std::cout << "No room is available for checkout.\n";
+    } else {
+        BookingManager::getInstance().checkout();
+    }
+}
         else if (choice == 4)
             BookingManager::getInstance().showRoomStatus();
         else
